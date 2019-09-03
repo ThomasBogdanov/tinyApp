@@ -18,11 +18,13 @@ function generateRandomString() {
 
 
 
+
 app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+
 };
 
 app.get("/urls", (req, res) => {
@@ -32,6 +34,17 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+});
+
+//edit
+app.post("/urls/:shortURL/edit", (req, res) => {
+  const newName = req.body.newName;
+  console.log(req.params.shortURL);
+  console.log(newName);
+  const id = req.params.shortURL;
+  urlDatabase[id] = newName;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -49,10 +62,10 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
-  if (longURL.includes(`http://`)) {
+  if (longURL.includes('http://')) {
     res.redirect(longURL);
   } else {
-    longURL = `http://` + longURL;
+    longURL = 'http://' + longURL;
     res.redirect(longURL);
   }
 });
@@ -60,11 +73,9 @@ app.get("/u/:shortURL", (req, res) => {
 //delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const id = req.params.shortURL;
-  console.log(id);
-  console.log(urlDatabase[id]);
   delete urlDatabase[id];
   res.redirect('/urls');
-})
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
