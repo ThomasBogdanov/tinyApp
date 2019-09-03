@@ -2,16 +2,18 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
+const morgan = require("morgan");
+app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 
 function generateRandomString() {
-  let resultString = '';
+  let result = '';
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charLength = chars.length;
+  let characterLength = chars.length;
   for (let i = 1; i<7; i++) {
-    results += chars.charsAt(Math.floor(Math.random() * charLength));
+    result += chars.charAt(Math.floor(Math.random() * characterLength));
   }
-  return results;
+  return result;
 }
 
 
@@ -23,44 +25,36 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
-});
- 
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
-});
-
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const randomStr = generateRandomString();
+  console.log(req.body.longURL);
+  urlDatabase[randomStr] = req.body.longURL;
+  res.redirect('/urls/' + randomStr);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  if (longURL.includes(`http://`)) {
+    res.redirect(longURL);
+  } else {
+    longURL = `http://` + longURL;
+    res.redirect(longURL);
+  }
 });
 
 app.listen(PORT, () => {
