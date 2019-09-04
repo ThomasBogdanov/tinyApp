@@ -49,21 +49,25 @@ const users = {
 }
 
 
-
+let defaultTemplateVars = {user: undefined};
 
 
 //register
 app.get("/register", (req, res) => {
   let templateVars = {
-    userName: req.cookies["userName"]
+    user: undefined
   };
   res.render("urls_registration", templateVars);
 });
 
 //urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, userName: req.cookies["userName"] };
-  console.log(users);
+  const userID = req.cookies["userID"];
+  const user = users[userID];
+  let templateVars = { 
+    urls: urlDatabase, 
+    user
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -85,7 +89,10 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 //Urls_show
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userName: req.cookies["userName"] };
+  let templateVars = { 
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL], 
+    userName: req.cookies["userName"] };
   res.render("urls_show", templateVars);
 });
 
@@ -129,12 +136,13 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+//register
 app.post("/register", (req, res) => {
   const randomStr = generateRandomString();
   let id = randomStr;
   let email = req.body.email;
   let password = req.body.password;
-  let newUser = ("user" + randomStr);
+  let newUser = (randomStr);
   if (email === '' || password === '') {
     return res.status(400).send('Email or password field(s) are empty');
   } else if (emailChecker(email)) {
