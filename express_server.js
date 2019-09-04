@@ -18,6 +18,15 @@ function generateRandomString() {
   return result;
 }
 
+function emailChecker(newUserEmail) {
+  for (eachUser in users) {
+    if (newUserEmail === users[eachUser]["email"]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -25,6 +34,23 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 
 };
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+
+
+
 
 //register
 app.get("/register", (req, res) => {
@@ -37,6 +63,7 @@ app.get("/register", (req, res) => {
 //urls_index
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase, userName: req.cookies["userName"] };
+  console.log(users);
   res.render("urls_index", templateVars);
 });
 
@@ -65,7 +92,6 @@ app.get("/urls/:shortURL", (req, res) => {
 //string Shortening
 app.post("/urls", (req, res) => {
   const randomStr = generateRandomString();
-  console.log(req.body.longURL);
   urlDatabase[randomStr] = req.body.longURL;
   res.redirect('/urls/' + randomStr);
 });
@@ -100,6 +126,26 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   let userName = req.cookies["userName"];
   res.cookie("userName", "", {expires: new Date(0)});
+  res.redirect("/urls");
+});
+
+app.post("/register", (req, res) => {
+  const randomStr = generateRandomString();
+  let id = randomStr;
+  let email = req.body.email;
+  let password = req.body.password;
+  let newUser = ("user" + randomStr);
+  if (email === '' || password === '') {
+    return res.status(400).send('Email or password field(s) are empty');
+  } else if (emailChecker(email)) {
+    return res.status(400).send('Email is already in use');
+  }
+  users[newUser] = {
+    "id": id,
+    "email": email,
+    "password": password
+  };
+  res.cookie('userID', id);
   res.redirect("/urls");
 });
 
