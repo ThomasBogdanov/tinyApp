@@ -26,15 +26,21 @@ const urlDatabase = {
 
 };
 
-app.get("/login", (req, res) => {
-  
-})
+//register
+app.get("/register", (req, res) => {
+  let templateVars = {
+    userName: req.cookies["userName"]
+  };
+  res.render("urls_registration", templateVars);
+});
 
+//urls_index
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase, userName: req.cookies["userName"] };
   res.render("urls_index", templateVars);
 });
 
+//urls_new
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     userName: req.cookies["userName"]
@@ -50,11 +56,13 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+//Urls_show
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], userName: req.cookies["userName"] };
   res.render("urls_show", templateVars);
 });
 
+//string Shortening
 app.post("/urls", (req, res) => {
   const randomStr = generateRandomString();
   console.log(req.body.longURL);
@@ -62,6 +70,7 @@ app.post("/urls", (req, res) => {
   res.redirect('/urls/' + randomStr);
 });
 
+//longURL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
   if (longURL.includes('http://')) {
@@ -71,6 +80,7 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   }
 });
+
 
 //delete
 app.post("/urls/:shortURL/delete", (req, res) => {
