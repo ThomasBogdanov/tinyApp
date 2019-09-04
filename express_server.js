@@ -50,6 +50,7 @@ const users = {
 
 
 let defaultTemplateVars = {user: undefined};
+let ifLogged = null;
 
 
 //register
@@ -73,6 +74,9 @@ app.get("/urls", (req, res) => {
 
 //urls_new
 app.get("/urls/new", (req, res) => {
+  if (!ifLogged) {
+    res.redirect("/login");
+  }
   let templateVars = {
     user: req.cookies["userID"]
   };
@@ -144,6 +148,7 @@ app.post("/login", (req, res) => {
   if (found["password"] !== req.body.password) {
     return res.status(403).send('Password incorrect!');
   }
+  ifLogged = true;
   res.cookie('userID', found["id"]);
   res.redirect("/urls");
 });
@@ -155,6 +160,7 @@ app.post("/logout", (req, res) => {
   let userID = req.cookies["userID"];
   res.cookie("userID", "", {expires: new Date(0)});
   res.redirect("/urls");
+  ifLogged = false;
 });
 
 //register
@@ -174,6 +180,7 @@ app.post("/register", (req, res) => {
     "email": email,
     "password": password
   };
+  ifLogged = true;
   res.cookie('userID', id);
   res.redirect("/urls");
 });
