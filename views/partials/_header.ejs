@@ -9,11 +9,9 @@
           <a class="nav-item nav-link" href="/urls">My URLs</a>
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
           <% if (user === undefined) { %>
-            <form method="POST" action="/login">
-              <label for="login">user</label>
-              <input id="login" name="login"/>
-              <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+            <a class="nav-item nav-link" href="/login"><button class="btn btn-primary">Login</button></a>
+            <a class="nav-item nav-link" href="/register"><button class="btn btn-primary">Register</button></a>
+            
             <% } else { %>
             <a class="nav-item nav-link" href="/logout"><%= user.email %></a>
             <form method="POST" action="/logout">
