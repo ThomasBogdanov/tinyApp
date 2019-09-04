@@ -18,9 +18,6 @@ function generateRandomString() {
   return result;
 }
 
-
-
-
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -86,6 +83,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/login", (req, res) => {
   let userName = req.body.login;
   res.cookie('userName', userName);
+  res.redirect("/urls");
+});
+
+//Logout
+app.post("/logout", (req, res) => {
+  let userName = req.cookies["userName"];
+  res.cookie("userName", "", {expires: new Date(0)});
   res.redirect("/urls");
 });
 
