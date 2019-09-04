@@ -3,8 +3,10 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookie-parser());
 
 function generateRandomString() {
   let result = '';
@@ -26,6 +28,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 
 };
+
+app.get("/login", (req, res) => {
+  
+})
 
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
