@@ -74,7 +74,7 @@ app.get("/urls", (req, res) => {
 //urls_new
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    userName: req.cookies["userName"]
+    user: req.cookies["userID"]
   };
   res.render("urls_new", templateVars);
 });
@@ -92,7 +92,7 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { 
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL], 
-    userName: req.cookies["userName"] };
+    user: req.cookies["userID"] };
   res.render("urls_show", templateVars);
 });
 
@@ -114,7 +114,6 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-
 //delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const id = req.params.shortURL;
@@ -122,17 +121,39 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls');
 });
 
-//Login + cookies
-app.post("/login", (req, res) => {
-  let userName = req.body.login;
-  res.cookie('userName', userName);
+app.get("/login", (req, res) => {
+  let templateVars = {
+    user: undefined
+  };
+  res.render("urls_login", templateVars);
   res.redirect("/urls");
 });
 
+//Login + cookies
+app.post("/login", (req, res) => {
+  let email = req.body.email;
+  let found = null;
+  for (userID in users) {
+    if (users[userID]["email"] === email) {
+      found = users[userID];
+    }
+  }
+  if (!found){
+  return res.status(403).send('Email does not exist'); 
+  }
+  if (found["password"] !== req.body.password) {
+    return res.status(403).send('Password incorrect!');
+  }
+  res.cookie('userID', found["id"]);
+  res.redirect("/urls");
+});
+
+
+
 //Logout
 app.post("/logout", (req, res) => {
-  let userName = req.cookies["userName"];
-  res.cookie("userName", "", {expires: new Date(0)});
+  let userID = req.cookies["userID"];
+  res.cookie("userID", "", {expires: new Date(0)});
   res.redirect("/urls");
 });
 
