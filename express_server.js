@@ -4,6 +4,7 @@ const PORT = 8080;
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -64,8 +65,6 @@ function urlsForUser(id) {
   return allAccURLS;
 }
 
-
-let defaultTemplateVars = {user: undefined};
 let ifLogged = null;
 
 
@@ -177,15 +176,14 @@ app.post("/login", (req, res) => {
   if (!found){
   return res.send('Email does not exist').status(403);
   }
-  if (found["password"] !== req.body.password) {
+  if (!bcrypt.compareSync(req.body.password, found["hashedPassword"])) {
     return res.send('Password incorrect!').status(403);
+  } else {
+    ifLogged = true;
+    res.cookie('userID', found["id"]);
+    res.redirect("/urls");
   }
-  ifLogged = true;
-  res.cookie('userID', found["id"]);
-  res.redirect("/urls");
 });
-
-
 
 //Logout
 app.post("/logout", (req, res) => {
@@ -201,6 +199,7 @@ app.post("/register", (req, res) => {
   let id = randomStr;
   let email = req.body.email;
   let password = req.body.password;
+  let hashedPassword = bcrypt.hashSync(password, 10);
   let newUser = (randomStr);
   if (email === '' || password === '') {
     return res.status(400).send('Email or password field(s) are empty');
@@ -210,7 +209,7 @@ app.post("/register", (req, res) => {
   users[newUser] = {
     "id": id,
     "email": email,
-    "password": password
+    "hashedPassword": hashedPassword
   };
   ifLogged = true;
   res.cookie('userID', id);
