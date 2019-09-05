@@ -3,11 +3,14 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["hello"],
+}))
 
 function generateRandomString() {
   let result = '';
@@ -78,10 +81,10 @@ app.get("/register", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   const user = users[userID];
   let templateVars = { 
-    urls: urlsForUser(req.cookies["userID"]),
+    urls: urlsForUser(req.session.userID),
     user,
     allURLS: urlDatabase
   };
@@ -94,9 +97,10 @@ app.get("/urls/new", (req, res) => {
   if (!ifLogged) {
     res.redirect("/login");
   }
-  let shortURL = req.cookies["userID"];
+  const userID = req.session.userID;
+  const user = users[userID];
   let templateVars = {
-    user: req.cookies["userID"]
+    user
   };
   res.render("urls_new", templateVars);
 });
@@ -107,7 +111,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   const id = req.params.shortURL;
   urlDatabase[id]["longURL"] = newName;
   if (id !== undefined) {
-    if (urlDatabase[id]["userID"] !== req.cookies["userID"]) {
+    if (urlDatabase[id]["userID"] !== req.session.userID) {
       return res.send('Not your URL to delete!').status(403);
     } else {
   // urlDatabase[id]["userID"] = users[userID]; ---> dont need for edits yet
@@ -121,14 +125,14 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { 
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL]["longURL"], 
-    user: req.cookies["userID"] };
+    user: req.session.userID };
   res.render("urls_show", templateVars);
 });
 
 //string Shortening
 app.post("/urls", (req, res) => {
   const randomStr = generateRandomString();
-  urlDatabase[randomStr] = {longURL: req.body.longURL, userID: req.cookies["userID"]};
+  urlDatabase[randomStr] = {longURL: req.body.longURL, userID: req.session.userID};
   res.redirect('/urls/' + randomStr);
 });
 
@@ -147,7 +151,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const id = req.params.shortURL;
   if (id !== undefined) {
-    if (urlDatabase[id]["userID"] !== req.cookies["userID"]) {
+    if (urlDatabase[id]["userID"] !== req.session.userID) {
       return res.send('Not your URL to delete!').status(403);
     } else {
     delete urlDatabase[id];
@@ -187,32 +191,34 @@ app.post("/login", (req, res) => {
 
 //Logout
 app.post("/logout", (req, res) => {
-  let userID = req.cookies["userID"];
-  res.cookie("userID", "", {expires: new Date(0)});
+  // let userID = req.session.userID;
+  req.session = null;
+  // res.cookie("userID", "", {expires: new Date(0)});
   res.redirect("/urls");
   ifLogged = false;
 });
 
 //register
 app.post("/register", (req, res) => {
-  const randomStr = generateRandomString();
-  let id = randomStr;
+  const id = generateRandomString();
+  // let id = randomStr;
   let email = req.body.email;
   let password = req.body.password;
   let hashedPassword = bcrypt.hashSync(password, 10);
-  let newUser = (randomStr);
+  // let newUser = (randomStr);
   if (email === '' || password === '') {
     return res.status(400).send('Email or password field(s) are empty');
   } else if (emailChecker(email)) {
     return res.status(400).send('Email is already in use');
   }
-  users[newUser] = {
+  users[id] = {
     "id": id,
     "email": email,
     "hashedPassword": hashedPassword
   };
   ifLogged = true;
-  res.cookie('userID', id);
+  req.session.userID = id;
+  // res.cookie('userID', id);
   res.redirect("/urls");
 });
 
