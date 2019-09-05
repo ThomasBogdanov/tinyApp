@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
+const { emailChecker } = require("./helper.js");
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -22,41 +23,14 @@ function generateRandomString() {
   return result;
 }
 
-function emailChecker(newUserEmail) {
-  for (eachUser in users) {
-    if (newUserEmail === users[eachUser]["email"]) {
-      return true;
-    }
-  }
-  return false;
-}
-
 app.set("view engine", "ejs");
-
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-
-// };
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
-
-const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-}
+const users = {};
 
 function urlsForUser(id) {
   let allAccURLS = [];
@@ -70,6 +44,14 @@ function urlsForUser(id) {
 
 let ifLogged = null;
 
+// / page
+app.get("/", (req, res) => {
+  if (req.session.userID) {
+    res.redirect(`/urls`)
+  } else {
+    res.redirect(`/login`)
+  }
+});
 
 //register
 app.get("/register", (req, res) => {
@@ -81,6 +63,9 @@ app.get("/register", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
+  if (!req.session.userID) {
+    res.redirect(`login`)
+  };
   const userID = req.session.userID;
   const user = users[userID];
   let templateVars = { 
@@ -160,6 +145,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
+//GET Login
 app.get("/login", (req, res) => {
   let templateVars = {
     user: undefined
@@ -184,7 +170,10 @@ app.post("/login", (req, res) => {
     return res.send('Password incorrect!').status(403);
   } else {
     ifLogged = true;
-    res.cookie('userID', found["id"]);
+    // res.cookie('userID', found["id"]);
+    console.log(userID);
+    req.session.userID = found["id"];
+    
     res.redirect("/urls");
   }
 });
@@ -198,7 +187,7 @@ app.post("/logout", (req, res) => {
   ifLogged = false;
 });
 
-//register
+//POST register
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   // let id = randomStr;
@@ -208,7 +197,7 @@ app.post("/register", (req, res) => {
   // let newUser = (randomStr);
   if (email === '' || password === '') {
     return res.status(400).send('Email or password field(s) are empty');
-  } else if (emailChecker(email)) {
+  } else if (emailChecker(email, users)) {
     return res.status(400).send('Email is already in use');
   }
   users[id] = {
