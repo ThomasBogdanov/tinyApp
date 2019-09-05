@@ -29,11 +29,17 @@ function emailChecker(newUserEmail) {
 
 app.set("view engine", "ejs");
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
 
+// };
+
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
 
 const users = { 
   "userRandomID": {
@@ -87,7 +93,8 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls/:shortURL/edit", (req, res) => {
   const newName = req.body.newName;
   const id = req.params.shortURL;
-  urlDatabase[id] = newName;
+  urlDatabase[id]["longURL"] = newName;
+  // urlDatabase[id]["userID"] = users[userID]; ---> dont need for edits yet
   res.redirect(`/urls/${id}`);
 });
 
@@ -95,7 +102,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { 
     shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL], 
+    longURL: urlDatabase[req.params.shortURL]["longURL"], 
     user: req.cookies["userID"] };
   res.render("urls_show", templateVars);
 });
@@ -109,7 +116,7 @@ app.post("/urls", (req, res) => {
 
 //longURL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL]["longURL"];
   if (longURL.includes('http://')) {
     res.redirect(longURL);
   } else {
