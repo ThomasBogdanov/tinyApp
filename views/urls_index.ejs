@@ -26,13 +26,13 @@
         </tr>
       </thead>
       <tbody>
-        <% for(let url in urls) { %>
+        <% for(let keys of urls) { %>
           <tr>
-            <td><%= url %></td>
-            <td><%= urls[url]["longURL"] %></td>
-            <td><a class="btn btn-primary" href="/urls/<%=url%>">Edit</a></td>
+            <td><%= keys %></td>
+            <td><%= allURLS[keys]["longURL"] %></td>
+            <td><a class="btn btn-primary" href="/urls/<%=keys%>">Edit</a></td>
             <td>
-                <form method="POST" action="/urls/<%= url %>/delete">
+                <form method="POST" action="/urls/<%= keys %>/delete">
                 <button class="btn btn-primary" type = "submit">Delete</button>
             </td>
           </tr>

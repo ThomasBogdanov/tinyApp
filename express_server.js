@@ -54,6 +54,16 @@ const users = {
   }
 }
 
+function urlsForUser(id) {
+  let allAccURLS = [];
+  for (keys in urlDatabase) {
+    if (urlDatabase[keys]["userID"] === id) {
+      allAccURLS.push(keys);
+    }
+  } 
+  return allAccURLS;
+}
+
 
 let defaultTemplateVars = {user: undefined};
 let ifLogged = null;
@@ -72,9 +82,12 @@ app.get("/urls", (req, res) => {
   const userID = req.cookies["userID"];
   const user = users[userID];
   let templateVars = { 
-    urls: urlDatabase, 
-    user
+    urls: urlsForUser(req.cookies["userID"]),
+    user,
+    allURLS: urlDatabase
   };
+  console.log(templateVars["urls"]);
+
   res.render("urls_index", templateVars);
 });
 
@@ -83,6 +96,7 @@ app.get("/urls/new", (req, res) => {
   if (!ifLogged) {
     res.redirect("/login");
   }
+  let shortURL = req.cookies["userID"];
   let templateVars = {
     user: req.cookies["userID"]
   };
@@ -110,7 +124,7 @@ app.get("/urls/:shortURL", (req, res) => {
 //string Shortening
 app.post("/urls", (req, res) => {
   const randomStr = generateRandomString();
-  urlDatabase[randomStr] = req.body.longURL;
+  urlDatabase[randomStr] = {longURL: req.body.longURL, userID: req.cookies["userID"]};
   res.redirect('/urls/' + randomStr);
 });
 
@@ -150,10 +164,10 @@ app.post("/login", (req, res) => {
     }
   }
   if (!found){
-  return res.status(403).send('Email does not exist'); 
+  return res.send('Email does not exist').status(403);
   }
   if (found["password"] !== req.body.password) {
-    return res.status(403).send('Password incorrect!');
+    return res.send('Password incorrect!').status(403);
   }
   ifLogged = true;
   res.cookie('userID', found["id"]);
@@ -195,3 +209,4 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
