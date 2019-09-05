@@ -86,7 +86,6 @@ app.get("/urls", (req, res) => {
     user,
     allURLS: urlDatabase
   };
-  console.log(templateVars["urls"]);
 
   res.render("urls_index", templateVars);
 });
@@ -108,8 +107,14 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   const newName = req.body.newName;
   const id = req.params.shortURL;
   urlDatabase[id]["longURL"] = newName;
+  if (id !== undefined) {
+    if (urlDatabase[id]["userID"] !== req.cookies["userID"]) {
+      return res.send('Not your URL to delete!').status(403);
+    } else {
   // urlDatabase[id]["userID"] = users[userID]; ---> dont need for edits yet
-  res.redirect(`/urls/${id}`);
+    res.redirect(`/urls/${id}`);
+    }
+  }
 });
 
 //Urls_show
@@ -142,8 +147,14 @@ app.get("/u/:shortURL", (req, res) => {
 //delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const id = req.params.shortURL;
-  delete urlDatabase[id];
-  res.redirect('/urls');
+  if (id !== undefined) {
+    if (urlDatabase[id]["userID"] !== req.cookies["userID"]) {
+      return res.send('Not your URL to delete!').status(403);
+    } else {
+    delete urlDatabase[id];
+    res.redirect('/urls');
+    }
+  }
 });
 
 app.get("/login", (req, res) => {
