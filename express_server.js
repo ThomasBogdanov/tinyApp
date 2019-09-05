@@ -11,17 +11,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ["hello"],
-}))
+}));
 
-function generateRandomString() {
+const generateRandomString = function() {
   let result = '';
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let characterLength = chars.length;
-  for (let i = 1; i<7; i++) {
+  for (let i = 1; i < 7; i++) {
     result += chars.charAt(Math.floor(Math.random() * characterLength));
   }
   return result;
-}
+};
 
 app.set("view engine", "ejs");
 
@@ -30,37 +30,26 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
-const users = {
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-};
+const users = {};
 
-function urlsForUser(id) {
+const urlsForUser = function(id) {
   let allAccURLS = [];
-  for (keys in urlDatabase) {
+  for (let keys in urlDatabase) {
     if (urlDatabase[keys]["userID"] === id) {
       allAccURLS.push(keys);
     }
-  } 
+  }
   return allAccURLS;
-}
+};
 
 let ifLogged = null;
 
 // / page
 app.get("/", (req, res) => {
   if (req.session.userID) {
-    res.redirect(`/urls`)
+    res.redirect(`/urls`);
   } else {
-    res.redirect(`/login`)
+    res.redirect(`/login`);
   }
 });
 
@@ -75,11 +64,11 @@ app.get("/register", (req, res) => {
 //urls_index
 app.get("/urls", (req, res) => {
   if (!req.session.userID) {
-    res.redirect(`login`)
-  };
+    res.redirect(`login`);
+  }
   const userID = req.session.userID;
   const user = users[userID];
-  let templateVars = { 
+  let templateVars = {
     urls: urlsForUser(req.session.userID),
     user,
     allURLS: urlDatabase
@@ -110,17 +99,16 @@ app.post("/urls/:shortURL/edit", (req, res) => {
     if (urlDatabase[id]["userID"] !== req.session.userID) {
       return res.send('Not your URL to delete!').status(403);
     } else {
-  // urlDatabase[id]["userID"] = users[userID]; ---> dont need for edits yet
-    res.redirect(`/urls/${id}`);
+      res.redirect(`/urls/${id}`);
     }
   }
 });
 
 //Urls_show
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { 
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL]["longURL"], 
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
     user: req.session.userID };
   res.render("urls_show", templateVars);
 });
@@ -150,8 +138,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     if (urlDatabase[id]["userID"] !== req.session.userID) {
       return res.send('Not your URL to delete!').status(403);
     } else {
-    delete urlDatabase[id];
-    res.redirect('/urls');
+      delete urlDatabase[id];
+      res.redirect('/urls');
     }
   }
 });
@@ -169,20 +157,19 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let found = null;
-  for (userID in users) {
+  for (let userID in users) {
     if (users[userID]["email"] === email) {
       found = users[userID];
     }
   }
-  if (!found){
-  return res.send('Email does not exist').status(403);
+  if (!found) {
+    return res.send('Email does not exist').status(403);
   }
   if (!bcrypt.compareSync(req.body.password, found["hashedPassword"])) {
     return res.send('Password incorrect!').status(403);
   } else {
     ifLogged = true;
     // res.cookie('userID', found["id"]);
-    console.log(userID);
     req.session.userID = found["id"];
     
     res.redirect("/urls");

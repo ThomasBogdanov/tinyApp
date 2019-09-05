@@ -1,10 +1,10 @@
-function emailChecker(newUserEmail, database) {
-    for (eachUser in database) {
-      if (newUserEmail === database[eachUser]["email"]) {
-        return true;
-      }
+const emailChecker = function(newUserEmail, database) {
+  for (let eachUser in database) {
+    if (newUserEmail === database[eachUser]["email"]) {
+      return true;
     }
-    return false;
+  }
+  return false;
 };
 
 module.exports = { emailChecker };
