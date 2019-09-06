@@ -1,7 +1,3 @@
-///////////////////////////////////
-// All requires and declarations //
-///////////////////////////////////
-
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -10,17 +6,12 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 const { emailChecker } = require("./helper.js");
-app.set("view engine", "ejs");
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ["hello"],
 }));
-
-///////////////////
-// All Functions //
-///////////////////
 
 const generateRandomString = function() {
   let result = '';
@@ -32,6 +23,15 @@ const generateRandomString = function() {
   return result;
 };
 
+app.set("view engine", "ejs");
+
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+};
+
+const users = {};
+
 const urlsForUser = function(id) {
   let allAccURLS = [];
   for (let keys in urlDatabase) {
@@ -42,22 +42,9 @@ const urlsForUser = function(id) {
   return allAccURLS;
 };
 
-////////////////////////////////////
-// Required variable declarations //
-////////////////////////////////////
-
-const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
-};
-const users = {};
 let ifLogged = null;
 
-//////////////////////
-// All GET requests //
-//////////////////////
-
-// "/"" page
+// / page
 app.get("/", (req, res) => {
   if (req.session.userID) {
     res.redirect(`/urls`);
@@ -103,39 +90,6 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-//Urls_show
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user: req.session.userID };
-  res.render("urls_show", templateVars);
-});
-
-//longURL
-app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL]["longURL"];
-  if (longURL.includes('http://')) {
-    res.redirect(longURL);
-  } else {
-    longURL = 'http://' + longURL;
-    res.redirect(longURL);
-  }
-});
-
-//GET Login
-app.get("/login", (req, res) => {
-  let templateVars = {
-    user: undefined
-  };
-  res.render("urls_login", templateVars);
-  res.redirect("/urls");
-});
-
-///////////////////////
-// All POST requests //
-///////////////////////
-
 //edit
 app.post("/urls/:shortURL/edit", (req, res) => {
   const newName = req.body.newName;
@@ -150,11 +104,31 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
+//Urls_show
+app.get("/urls/:shortURL", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
+    user: req.session.userID };
+  res.render("urls_show", templateVars);
+});
+
 //string Shortening
 app.post("/urls", (req, res) => {
   const randomStr = generateRandomString();
   urlDatabase[randomStr] = {longURL: req.body.longURL, userID: req.session.userID};
   res.redirect('/urls/' + randomStr);
+});
+
+//longURL
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL]["longURL"];
+  if (longURL.includes('http://')) {
+    res.redirect(longURL);
+  } else {
+    longURL = 'http://' + longURL;
+    res.redirect(longURL);
+  }
 });
 
 //delete
@@ -168,6 +142,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
       res.redirect('/urls');
     }
   }
+});
+
+//GET Login
+app.get("/login", (req, res) => {
+  let templateVars = {
+    user: undefined
+  };
+  res.render("urls_login", templateVars);
+  res.redirect("/urls");
 });
 
 //Login + cookies
@@ -202,7 +185,7 @@ app.post("/logout", (req, res) => {
   ifLogged = false;
 });
 
-//register
+//POST register
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   // let id = randomStr;
@@ -225,10 +208,6 @@ app.post("/register", (req, res) => {
   // res.cookie('userID', id);
   res.redirect("/urls");
 });
-
-////////////////////////////////
-// Server Status Verification //
-////////////////////////////////
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
